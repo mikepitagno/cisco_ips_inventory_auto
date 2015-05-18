@@ -23,6 +23,7 @@ IPS-DEVICE-2
  -Signature Date: 2015-05-12
  -Signature Version: S868.0
 '''
+#!/usr/bin/env python
 
 import sys
 import paramiko
