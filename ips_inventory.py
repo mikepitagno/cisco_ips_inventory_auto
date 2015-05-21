@@ -76,14 +76,51 @@ def get_show_version(host, username, password):
   remote_conn_pre.close()
   return output_list  
 
-# Print dictionary to file.
-def print_dict_file(ips_dict):
+# Print dictionary to text file.
+def print_dict_text(ips_dict):
   output_file = open('ips_inventory_output.txt', 'w')
   for k, v in sorted(ips_dict.items()):
     print >> output_file, k.upper()  
     for k1, v1 in sorted(v.items()):
       print >> output_file, " -%s: %s" % (k1, v1)
     print >> output_file, "\n"  
+
+# Print dictionary to HTML file.
+def print_dict_html(ips_dict):
+  output_file = open('ips_inventory.html', 'w')
+  print >> output_file, "<head>"
+  print >> output_file, '  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />'
+  print >> output_file, "  <title>IPS Inventory Info</title>"
+  print >> output_file, '  <style type="text/css">'  
+  print >> output_file, "    #container {"
+  print >> output_file, "      width: 780px;"
+  print >> output_file, "      background: #FFFFFF;"
+  print >> output_file, "      margin: 0 auto;"
+  print >> output_file, "      border: 1px solid #000000;"
+  print >> output_file, "      text-align: left;"
+  print >> output_file, "    }"
+  print >> output_file, "    #mainContent {"
+  print >> output_file, "      margin: 0 0 0 0px;"
+  print >> output_file, "      padding: 0 20px 20px 20px;"
+  print >> output_file, "      line-height: 0.5;"
+  print >> output_file, "    }"
+  print >> output_file, "  </style>"
+  print >> output_file, "</head>"
+  print >> output_file, "<body>"
+  print >> output_file, "  <!--container div tag-->"
+  print >> output_file, '  <div id="container">'
+  print >> output_file, "    <!--mainContent div tag-->"
+  print >> output_file, '    <div id="mainContent">'
+  print >> output_file, "      <h1>IPS Inventory Info</h1>"
+  print >> output_file, "      <BR>"
+  for k, v in sorted(ips_dict.items()):
+    print >> output_file, "<H3>%s</H3>" % k.upper()
+    for k1, v1 in sorted(v.items()):
+      print >> output_file, "<p> -%s: %s</p>" % (k1, v1)
+    print >> output_file, "<BR>"
+  print >> output_file, "      </div>"
+  print >> output_file, "  </div>"
+  print >> output_file, "</body>"
 
 # Print dictionary to standard output.
 def print_dict_stdout(ips_dict):
@@ -116,7 +153,7 @@ def main():
     password = getpass.getpass("Please enter IPS password: ")
 
     ips_dict = create_ips_dict(ips_list, username, password)  
-    print_dict_file(ips_dict)
+    print_dict_html(ips_dict)
 
   else:
     print "ERROR: Missing device list file.  Please include the full path of the IPS device list after the script name."
