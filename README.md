@@ -1,4 +1,4 @@
-## IPS Inventory Auto
+## Cisco IPS Inventory Auto
 
 ### Introduction
 
