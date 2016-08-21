@@ -103,9 +103,9 @@ def load_dict_into_string(ips_dict):
 
 # Pull latest Cisco IPS bulletin from RSS feed compare to latest saved 
 def cisco_rss_info(rss_path):
-    f = file(rss_path, "w+")
-    rss_old = f.read().decode('utf8')
-    f.close()
+    with open(rss_path, "a+") as f:
+        rss_old = f.read().decode('utf8')
+        f.close()
     d = feedparser.parse('https://tools.cisco.com/security/center/activeUpdateBulletin_20.xml')
     try:
         rss = d['entries'][0]['title'] + "\n" + d.entries[0]['link'] + "\n"
