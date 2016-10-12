@@ -37,6 +37,8 @@ from email.mime.multipart import MIMEMultipart
 import feedparser
 import argparse
 from os.path import expanduser
+import socket
+import errno
 
 # Create Python list from user specified input file
 def create_ips_list(f):
@@ -52,20 +54,23 @@ def create_ips_dict(ips_list, username, password):
   for host in ips_list:
     ips_dict[host] = {}  
     output = get_show_version(host, username, password)
-    for line in output:
-      if 'Platform:' in line:
-        junk, platform = line.split()
-        ips_dict[host]['Platform'] = platform
-      if 'Serial Number:' in line:
-        junk1, junk2, serial = line.split()
-        ips_dict[host]['Serial No.'] = serial
-      if 'Signature Update' in line:
-        junk1, junk2, sigver, sigdate = line.split()
-        ips_dict[host]['Signature Version'] = sigver
-        ips_dict[host]['Signature Date'] = sigdate
-      if 'Cisco Intrusion Prevention System' in line:
-        junk, ver = line.split('Cisco Intrusion Prevention System, Version ')
-        ips_dict[host]['IPS Version'] = ver.strip()
+    if output[0] == 'ERROR':
+      ips_dict[host]['Error'] = output[1]
+    else:
+      for line in output:
+        if 'Platform:' in line:
+          junk, platform = line.split()
+          ips_dict[host]['Platform'] = platform
+        if 'Serial Number:' in line:
+          junk1, junk2, serial = line.split()
+          ips_dict[host]['Serial No.'] = serial
+        if 'Signature Update' in line:
+          junk1, junk2, sigver, sigdate = line.split()
+          ips_dict[host]['Signature Version'] = sigver
+          ips_dict[host]['Signature Date'] = sigdate
+        if 'Cisco Intrusion Prevention System' in line:
+          junk, ver = line.split('Cisco Intrusion Prevention System, Version ')
+          ips_dict[host]['IPS Version'] = ver.strip()
   return ips_dict
 
 # Disable paging on IPS device
@@ -78,18 +83,23 @@ def disable_paging(remote_conn, command="terminal length 0\n", delay=1):
 
 # Connect to device via SSH and pull 'show version' info
 def get_show_version(host, username, password):
-  remote_conn_pre = paramiko.SSHClient()
-  remote_conn_pre.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-  remote_conn_pre.connect(host, username=username, password=password)
-  remote_conn = remote_conn_pre.invoke_shell()
-  output = disable_paging(remote_conn)
-  remote_conn.send("\n")
-  remote_conn.send("show version\n")
-  time.sleep(2)
-  output = remote_conn.recv(10000)
-  output_list = output.split('\n')
-  remote_conn_pre.close()
-  return output_list  
+  try:
+      remote_conn_pre = paramiko.SSHClient()
+      remote_conn_pre.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+      remote_conn_pre.connect(host, username=username, password=password, timeout=2)
+      remote_conn = remote_conn_pre.invoke_shell()
+      output = disable_paging(remote_conn)
+      remote_conn.send("\n")
+      remote_conn.send("show version\n")
+      time.sleep(2)
+      output = remote_conn.recv(10000)
+      output_list = output.split('\n')
+      remote_conn_pre.close()
+      return output_list
+  except socket.error as e:
+    pass
+    output_list = ['ERROR', e] 
+    return output_list
 
 # Load IPS dictionary into a formatted string 
 def load_dict_into_string(ips_dict):
